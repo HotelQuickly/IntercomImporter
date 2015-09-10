@@ -144,7 +144,7 @@ def read_csv_file(config, filename, batch_size=50):
     if delimit=="":
         delimit=","
     csvReader = csv.reader(open(filename, 'rb'), delimiter=delimit, quotechar='"') #comma delimited file
-    data={"items":[]}
+    data={"users":[]}
     i=0
     for row in csvReader: #get headers in each column
         header=row
@@ -154,45 +154,104 @@ def read_csv_file(config, filename, batch_size=50):
         b=0
         stop=False
         for row in csvReader: #load data in batches and call intercom
-            user={'location_data': {}, 'custom_attributes': {}}  
+            #user={'location_data': {}, 'custom_attributes': {}}  
+            user={'custom_attributes': {}}  
             k=0       
             basic_params=config.config_data["basic_params"]
+            basic_params_types=config.config_data["basic_params_types"]
             for key, value in basic_params.items():
                 try:
                     if "'" in value:
                         value=value.replace("'","")
-                    elif value == "NULL":
-                        value=None
+                    elif value.strip() == "NULL":
+                        value=""
                     else:
                         value=row[header.index(value)]
+                    try:
+                        if basic_params_types[key] == "string":
+                            value = str(value)
+                        elif basic_params_types[key] == "integer":
+                            value = int(value)
+                        elif basic_params_types[key] == "timestamp":
+                            value = int(value)
+                        elif basic_params_types[key] == "boolean":
+                            if str(value) == "1":
+                                value = True
+                            else:
+                                value = False
+                        else:
+                            value = str(value)
+                    except Exception as e:
+                        try:
+                            if basic_params_types[key] == "string":
+                                value = ""
+                            elif basic_params_types[key] == "integer":
+                                value = 0
+                            elif basic_params_types[key] == "timestamp":
+                                value = 0
+                            elif basic_params_types[key] == "boolean":
+                                value = False
+                            else:
+                                value = ""
+                        except Exception as e:
+                            pass    
                     user[key]=value
                 except Exception as e:
                     pass
             custom_attributes=config.config_data["custom_attributes"]
+            custom_attributes_types=config.config_data["custom_attributes_types"]
             for key, value in custom_attributes.items():
                 try:
                     if "'" in value:
                         value=value.replace("'","")
-                    elif value == "NULL":
-                        value=None
+                    elif value.strip() == "NULL":
+                        value="NULL"
                     else:
                         value=row[header.index(value)]
-                    user["custom_attributes"][key]=value
+                    try:
+                        if custom_attributes_types[key] == "string":
+                            value = str(value)
+                        elif custom_attributes_types[key] == "integer":
+                            value = int(value)
+                        elif custom_attributes_types[key] == "timestamp":
+                            value = int(value)
+                        elif custom_attributes_types[key] == "boolean":
+                            if str(value) == "1":
+                                value = True
+                            else:
+                                value = False
+                        else:
+                            value = str(value)
+                    except Exception as e:
+                        try:
+                            if custom_attributes_types[key] == "string":
+                                value = "NULL"
+                            elif custom_attributes_types[key] == "integer":
+                                value = 0
+                            elif custom_attributes_types[key] == "timestamp":
+                                value = 0
+                            elif custom_attributes_types[key] == "boolean":
+                                value = False
+                            else:
+                                value = "NULL"
+                        except Exception as e:
+                            pass
+                    user["custom_attributes"][key.replace("_", " ")]=value
                 except Exception as e:
-                    pass
-            location_data=config.config_data["location_data"]
-            for key, value in location_data.items():
-                try:
-                    if "'" in value:
-                        value=value.replace("'","")
-                    elif value.strip(['\t', '\n', ' ']) == "NULL":
-                        value=""
-                    else:
-                        value=row[header.index(value)]
-                    user["location_data"][key]=value
-                except Exception as e:
-                    pass
-            data["items"].append({"method": "post", "data_type": "user", "data": user})
+                   pass
+            #location_data=config.config_data["location_data"]
+            #for key, value in location_data.items():
+            #    try:
+            #        if "'" in value:
+            #            value=value.replace("'","")
+            #        elif value.strip() == "NULL":
+            #            value=""
+            #        else:
+            #            value=row[header.index(value)]
+            #        user["location_data"][key]=value
+            #    except Exception as e:
+            #        pass
+            data["users"].append(user)
             i+=1
             if i%batch_size==0:
                 j=0
@@ -203,7 +262,7 @@ def read_csv_file(config, filename, batch_size=50):
                     else:
                         halt=False
                         b+=1
-                        del data["items"][:]
+                        del data["users"][:]
                     if j>50:
                         if stop:
                             halt=False
@@ -217,7 +276,7 @@ def read_csv_file(config, filename, batch_size=50):
                         stop=True
                 if stop:
                     break                
-        if len(data["items"])>0: #add leftover members after last batch
+        if len(data["users"])>0: #add leftover members after last batch
             j=0
             halt=True
             while halt:
@@ -226,7 +285,7 @@ def read_csv_file(config, filename, batch_size=50):
                 else:
                     halt=False
                     b+=1
-                    del data["items"][:]
+                    del data["users"][:]
                 if j>50:
                     if stop:
                         halt=False
@@ -261,20 +320,25 @@ def intercom(config, data, batch):
     try:
         config.log(str(data))
         url="https://"+config.config_data["intercom_api_url_bulk_users"]        
-        json_data = json.dumps(data)  
+        json_data = json.dumps(data) 
+        authinfo = urllib2.HTTPPasswordMgrWithDefaultRealm()
+        authinfo.add_password(None, "api.intercom.io" , config.config_data["intercom_api_id"], config.config_data["intercom_api_key"])
+        handler = urllib2.HTTPBasicAuthHandler(authinfo)
+        myopener = urllib2.build_opener(handler)
+        opened = urllib2.install_opener(myopener) 
         base64string = base64.encodestring('%s:%s' % (config.config_data["intercom_api_id"], config.config_data["intercom_api_key"])).replace('\n', '')
         req = urllib2.Request(url, json_data)
-        req.add_header("Authorization", "Basic %s" % base64string)   
+        #req.add_header("Authorization", "Basic %s" % base64string)   
         req.add_header('Content-Type', 'application/json')
-        req.add_header('Accept', 'application/json')
+        req.add_header('Accept', 'application/json')        
         response=urllib2.urlopen(req, timeout=config.config_data["intercom_timeout"])        
-        reply=json.loads(response.read())
+        #reply=json.loads(response.read())
         try:
-            config.log("Intercom Batch No. "+str(batch+1))
-            print "Intercom Batch No. "+str(batch+1)
-            config.log("Intercom Job Id "+str(reply["id"]))
-            config.log("Intercom Job Link "+str(reply["links"]["self"]))                         
-            config.log("Intercom Job Errors "+str(reply["links"]["error"]))                         
+            config.log("Intercom Batch No. "+str(batch+1)+" completed")
+            print "Intercom Batch No. "+str(batch+1)+" completed"
+            #config.log("Intercom Job Id "+str(reply["id"]))
+            #config.log("Intercom Job Link "+str(reply["links"]["self"]))                         
+            #config.log("Intercom Job Errors "+str(reply["links"]["error"]))                         
         except Exception as e:
             pass
         return True        

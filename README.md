@@ -17,7 +17,7 @@ CSV files maybe selected based on a time format top choose the latest file. The 
 Specific filenames may also be used.
 
 Intercom API Id, Intercom API Key for accessing your Intercom account and the bulk user url (default url is provided inside script) are needed in config to add/update users to Intercom
-The batch size maybe varied to regulate the number of users updated at one time. Intercom supports a maximum of around 100 objects in one request. You may vary this as per your upload speed and Intercom limitations.
+The batch size maybe varied to regulate the number of users updated at one time. Intercom supports a maximum of around 50 objects in one request. You may vary this as per your upload speed and Intercom limitations.
 The timeout for Intercom request must be set as per the number of users in one batch and your upload speed. The program will iterate through the CSV file and add/update users to Intercom in batches.
 
 Hipchat settings require the API key, room id where the notification is to be sent and a from name (hipchat allows names of 1 to 15 characters in length).

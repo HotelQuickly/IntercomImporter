@@ -5,7 +5,7 @@
  aws_folder="intercom-user/"
 # Full folder path for storing temporary CSV files from AWS S3 - default temporary folder provided by the OS will be used otherwise
  aws_local_tmp_folder="" 
- use_aws="true"
+ use_aws="false"
 ############################
 
 ### Local Storage for CSV file settings - used when AWS S3 is not used
@@ -15,54 +15,62 @@
 
 ### CSV File selection settings
 # Select file based on time based file name or specific file name
- select_file_on_latest_time="True"
+ select_file_on_latest_time="False"
 # Refer readme for time format - python time string format
  time_format="%Y-%m-%dT%H:%M:%S"
-# File_name - used when file selection is for a  particular file, this is enabled when select_file_on_latest_time="false"
- file_name="Test.csv"
+# File_name - used when file selection is for a  particular file, this is enabled when select_file_on_latest_time="False"
+ file_name="test_dump_03-09-15_14-32.csv"
  csv_delimiter=","
 ############################
 
 ### Intercom API config data
  intercom_api_id=""
- intercom_api_key="c0654f608e"
-# Maximum number of users imported per batch - depends on intercom API batch size
+ intercom_api_key=""
+# Maximum number of users imported per batch - depends on intercom API batch size - defaults to 50 if not specified
  intercom_batch_size="50"
 # Intercom API users create/update url  - do not add https:// or http:// - it will be done automatically after url basic authentication
- intercom_api_url_users="api.intercom.io/users"
+ intercom_api_url_bulk_users="api.intercom.io/users/bulk/"
+# Time limit in seconds for each batch of users to be added to Intercom
+ intercom_timeout="30"
 ############################
 
 ### Hipchat API config data
  hipchat_api_key="ac725b7c0395e02f923a10cba44c86"
 # Room id or name in hipchat 
- hipchat_room_id="399709"
+ hipchat_room_id=""
 # From name for hipchat message - length is 1 to 15 characters 
- hipchat_from="MCImporter"
+ hipchat_from="IntercomImporter"
 # Hipchat API URL
  hipchat_api_url="https://api.hipchat.com/v1/"
 # Notify hipchat
  notify_hipchat="false" 
 ############################
 
-### Slack API config data 
-# Slack API incoming webhook URL
+### Slack API config data - please use https:// in all slack urls if not present already
+# Slack API incoming webhook URL with https://
  slack_api_incoming_webhook=""
 # User name for slack notification - optional (username by default is customized name used in webhook) 
  slack_username="IntercomImporter"
-# Icon for slack notification - optional (both URL and emoji are needed if used)
+# Icon for slack notification - optional (both URL (with https://) and emoji are needed if used)
  slack_icon_url=""
  slack_icon_emoji=""
 # Notify slack
- notify_hipchat="true" 
+ notify_slack="true" 
 ############################
  
 ### CSV settings
-# Exact naming of CSV file column headings , this is used to verify the CSV file integrity, fetch and send data based on these headers
- csv_columns="user_id,full_name,email,registration_date,invite_url,personal_voucher_code,personal_voucher_amount,personal_voucher_currency,credits,already_redeemed_voucher,already_booked,language_code,device_code,country_code,voucher_code_to_expire,days_until_expiration_cnt,vip_flag,inactive_days_cnt,bookings_cnt,inactive_flag,email_hash,campaign_name,has_user_invited_contacts"
-# Tags for CSV columns as specified in MailChimp 
- merge_vars="USERID,FULLNAME,EMAIL,REGDATE,INVITEURL,VOUCHER,VOUCHERAMT,VOUCHCURR,CREDITS,REDEEMED,BOOKED,LANGUAGE,DEVICE,COUNTRY,EXPVOUCHER,VOUEXPDAYS,VIP,INACTDAYS,BOOKINGCNT,INACTIVE,EMAILHASH,CAMPAIGN,CONTINVITE"
-# This is used to indicate order of merge_vars in config file. Refer to Readme for clarification. 
- use_csv_order="false"
+# Params mapping for Intercom API users - use JSON object string (avoid new lines and quotes, mention NULL in upper case)
+# Intercom parameter as key (left side) and HQ parameter (CSV file heading) as value (right side)
+# Use single quotes for default values eg. location_data - type key
+ basic_params="{user_id:user_id, email:email, name:name, signed_up_at:first_seen_date_timestamp, last_request_at:last_seen_date_timestamp, unsubscribed_from_emails:unsubscribed_flag}"
+ custom_attributes="{personal_voucher_code:personal_voucher_code, personal_voucher_amount:personal_voucher_amount, personal_voucher_currency:personal_voucher_currency, credits:credits, already_redeemed_some_voucher:already_redeemed_some_voucher, already_booked:already_booked, language:language, country:country, last_city_visited:last_city_visited, bookings_count:bookings_count, campaign_name:campaign_name, already_invited_the_contacts:already_invited_the_contacts}"
+# Specify delimiter for CSV files - defaults to comma if not specified
+ csv_delimiter=","
+############################
+
+### Intercom Parameter Type Mapping
+ basic_params_types="{user_id:string, email:string, id:string, signed_up_at:timestamp, name:string, user_agent_data: string, last_request_at:timestamp, unsubscribed_from_emails:boolean}"
+ custom_attributes_types="{personal_voucher_code:string, personal_voucher_amount:string, personal_voucher_currency:string, credits:string, already_redeemed_some_voucher:boolean, already_booked:boolean, language:string, country:string, last_city_visited:string, bookings_count:string, campaign_name:string, already_invited_the_contacts:boolean}"
 ############################
  
 ### Log Information 

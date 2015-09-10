@@ -201,15 +201,15 @@ class Config_Data:
             self.valid=False
         try:
             if self.config_data["intercom_api_url_bulk_users"]=="":
-                self.log("Intercom API users URL is empty in config - using default URL api.intercom.io/users/")
-                self.config_data["intercom_api_url_bulk_users"]="api.intercom.io/users/"
+                self.log("Intercom API users URL is empty in config - using default URL api.intercom.io/users/bulk/")
+                self.config_data["intercom_api_url_bulk_users"]="api.intercom.io/users/bulk/"
             else:
                 if not self.config_data["intercom_api_url_bulk_users"][-1]=="/":
                     self.config_data["intercom_api_url_bulk_users"]=self.config_data["intercom_api_url_bulk_users"]+"/"
                 self.log("Intercom API users URL is "+self.config_data["intercom_api_url_bulk_users"])
         except KeyError as e:
-            self.log("Intercom API users URL is missing from config - using default URL api.intercom.io/bulk/users/")
-            self.config_data["intercom_api_url_bulk_users"]="api.intercom.io/bulk/users/"
+            self.log("Intercom API users URL is missing from config - using default URL api.intercom.io/users/bulk/")
+            self.config_data["intercom_api_url_bulk_users"]="api.intercom.io/users/bulk/"
         self.convert_to_int()
     #CSV file settings - Intercom parameters mapping
     def validate_csv_settings(self):
@@ -232,6 +232,24 @@ class Config_Data:
             self.valid=False
             self.log_error("\nError: basic params missing in Intercom parameter mapping in config\n")  
         try:
+            self.config_data["basic_params_types"] = self.config_data["basic_params_types"].replace(" ", "")
+            self.config_data["basic_params_types"] = self.config_data["basic_params_types"].replace("{", "")
+            self.config_data["basic_params_types"] = self.config_data["basic_params_types"].replace("}", "")
+            self.config_data["basic_params_types"] = self.config_data["basic_params_types"].split(',')
+            tmp = dict() 
+            for param in self.config_data["basic_params_types"]:
+                try:
+                    param = param.split(":")
+                    tmp[param[0]] = param[1]
+                except Exception as e:    
+                    self.valid=False        
+                    self.log_error("\nError: Invalid basic params Types in Intercom parameter mapping - check with example format\n")  
+                    break
+            self.config_data["basic_params_types"] = tmp
+        except KeyError as e:
+            self.valid=False
+            self.log_error("\nError: basic params Types missing in Intercom parameter mapping in config\n")  
+        try:
             self.config_data["custom_attributes"] = self.config_data["custom_attributes"].replace(" ", "")
             self.config_data["custom_attributes"] = self.config_data["custom_attributes"].replace("{", "")
             self.config_data["custom_attributes"] = self.config_data["custom_attributes"].replace("}", "")
@@ -250,23 +268,41 @@ class Config_Data:
             self.valid=False
             self.log_error("\nError: custom attributes missing in Intercom parameter mapping in config\n")  
         try:
-            self.config_data["location_data"] = self.config_data["location_data"].replace(" ", "")
-            self.config_data["location_data"] = self.config_data["location_data"].replace("{", "")
-            self.config_data["location_data"] = self.config_data["location_data"].replace("}", "")
-            self.config_data["location_data"] = self.config_data["location_data"].split(',')
+            self.config_data["custom_attributes_types"] = self.config_data["custom_attributes_types"].replace(" ", "")
+            self.config_data["custom_attributes_types"] = self.config_data["custom_attributes_types"].replace("{", "")
+            self.config_data["custom_attributes_types"] = self.config_data["custom_attributes_types"].replace("}", "")
+            self.config_data["custom_attributes_types"] = self.config_data["custom_attributes_types"].split(',')
             tmp = dict() 
-            for param in self.config_data["location_data"]:
+            for param in self.config_data["custom_attributes_types"]:
                 try:
                     param = param.split(":")
                     tmp[param[0]] = param[1]
                 except Exception as e:    
                     self.valid=False        
-                    self.log_error("\nError: Invalid location_data in Intercom parameter mapping  - check with example format\n")  
+                    self.log_error("\nError: Invalid custom attributes Types in Intercom parameter mapping - check with example format\n")  
                     break
-            self.config_data["location_data"] = tmp
+            self.config_data["custom_attributes_types"] = tmp
         except KeyError as e:
             self.valid=False
-            self.log_error("\nError: location_data missing in Intercom parameter mapping in config\n")  
+            self.log_error("\nError: custom attributes Types missing in Intercom parameter mapping in config\n")  
+        #try:
+        #    self.config_data["location_data"] = self.config_data["location_data"].replace(" ", "")
+        #    self.config_data["location_data"] = self.config_data["location_data"].replace("{", "")
+        #    self.config_data["location_data"] = self.config_data["location_data"].replace("}", "")
+        #    self.config_data["location_data"] = self.config_data["location_data"].split(',')
+        #    tmp = dict() 
+        #    for param in self.config_data["location_data"]:
+        #        try:
+        #            param = param.split(":")
+        #            tmp[param[0]] = param[1]
+        #        except Exception as e:    
+        #            self.valid=False        
+        #            self.log_error("\nError: Invalid location_data in Intercom parameter mapping  - check with example format\n")  
+        #            break
+        #   self.config_data["location_data"] = tmp
+        #except KeyError as e:
+        #    self.valid=False
+        #    self.log_error("\nError: location_data missing in Intercom parameter mapping in config\n")  
         try:
             if self.config_data["csv_delimiter"]=="":
                 self.config_data["csv_delimiter"]=","
