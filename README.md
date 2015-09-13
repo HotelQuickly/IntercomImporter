@@ -50,7 +50,7 @@ new_session - A boolean value, which if true, instructs Intercom to register the
 Hipchat settings require the API key, room id where the notification is to be sent and a from name (hipchat allows names of 1 to 15 characters in length).
 Hipchat maybe enabled or disabled, the root API URL is specified already.
 
-Slack settings require the incoming webhook url. Username and icon url , emoji are optional, default ones for the channel will be used otherwise.
+Slack settings require the incoming webhook url. Slack Channel can be specified, default webhook channel will be used otherwise. A user can be used instead of a channel by prepending the username with "@". Username and icon url , emoji are optional, default ones for the channel will be used otherwise.
 Slack maybe enabled or disabled.
 
 
