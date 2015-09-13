@@ -16,9 +16,36 @@ For local storage, specify a folder where the file is located.
 CSV files maybe selected based on a time format top choose the latest file. The filename should be timestamped as per the time format used in the config file.
 Specific filenames may also be used.
 
-Intercom API Id, Intercom API Key for accessing your Intercom account and the bulk user url (default url is provided inside script) are needed in config to add/update users to Intercom
-The batch size maybe varied to regulate the number of users updated at one time. Intercom supports a maximum of around 50 objects in one request. You may vary this as per your upload speed and Intercom limitations.
-The timeout for Intercom request must be set as per the number of users in one batch and your upload speed. The program will iterate through the CSV file and add/update users to Intercom in batches.
+Intercom API Id, Intercom API Key for accessing your Intercom account and the user url (default url is provided inside script) are needed in config to add/update users to Intercom
+The timeout for Intercom request is the time gap between Intercom requests in the event of error, upto 50 retries will be done. The program will iterate through the CSV file and add/update users to Intercom one by one.
+
+Allowed parameters for user in Intercom - any other will be discarded, please specify data type for custom attributes correctly in config, wrong data types prevent data being saved for users:
+
+user_id	- if no email	a unique string identifier for the user. It is required on creation if an email is not supplied.
+
+email - if no user_id	the user’s email address. It is required on creation if a user_id is not supplied.
+
+id - The id may be used for user updates.
+
+signed_up_at - The time the user signed up
+
+name - The user’s full name
+
+last_seen_ip - An ip address (e.g. “1.2.3.4”) representing the last ip address the user visited your application from. (Used for updating location_data)
+
+custom_attributes - A hash of key/value pairs containing any other data about the user you want Intercom to store.*
+
+last_seen_user_agent - The user agent the user last visited your application with. eg. "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.9"
+
+last_request_at - A UNIX timestamp (in seconds) representing the date the user last visited your application.
+
+unsubscribed_from_emails - A boolean value representing the users unsubscribed status. default value if not sent is false.
+
+update_last_request_at - A boolean value, which if true, instructs Intercom to update the users’ last_request_at value to the current API service time in UTC. default value if not sent is false.
+
+new_session - A boolean value, which if true, instructs Intercom to register the request as a session.
+
+
 
 Hipchat settings require the API key, room id where the notification is to be sent and a from name (hipchat allows names of 1 to 15 characters in length).
 Hipchat maybe enabled or disabled, the root API URL is specified already.

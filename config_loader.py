@@ -84,6 +84,8 @@ class Config_Data:
                                     self.log("Validated Intercom settings")
                                     #validate hipchat settings
                                     self.validate_hipchat()
+                                    #validate slack settings
+                                    self.validate_slack()
                 else:
                     print "\nError: File "+configfilename+" does not exist\n"
                     self.valid=False
@@ -110,6 +112,13 @@ class Config_Data:
                     self.log("\nError: Slack API Incoming webhook is missing from config\n")
                     self.log_error("\nError: Slack API Incoming webhook is missing from config\n")
                     self.valid=False
+                try:
+                    if self.config_data["slack_channel"]=="":
+                        pass
+                    elif not "#" in self.config_data["slack_channel"] and not "@" in self.config_data["slack_channel"]:
+                       self.config_data["slack_channel"]="#"+self.config_data["slack_channel"] 
+                except KeyError as e:
+                    self.config_data["slack_channel"] = ""
                 try:
                     if self.config_data["slack_username"]=="":
                         pass
@@ -200,16 +209,39 @@ class Config_Data:
             self.log_error("\nError: Intercom API Key is missing from config\n")
             self.valid=False
         try:
-            if self.config_data["intercom_api_url_bulk_users"]=="":
-                self.log("Intercom API users URL is empty in config - using default URL api.intercom.io/users/bulk/")
-                self.config_data["intercom_api_url_bulk_users"]="api.intercom.io/users/bulk/"
+            if self.config_data["intercom_bulk_api"].lower() == "false":
+                self.config_data["intercom_bulk_api"]=False
+                self.log("Bulk API usage not used")
             else:
-                if not self.config_data["intercom_api_url_bulk_users"][-1]=="/":
-                    self.config_data["intercom_api_url_bulk_users"]=self.config_data["intercom_api_url_bulk_users"]+"/"
-                self.log("Intercom API users URL is "+self.config_data["intercom_api_url_bulk_users"])
+                self.config_data["intercom_bulk_api"]=True
+                self.log("Bulk API usage is used")
         except KeyError as e:
-            self.log("Intercom API users URL is missing from config - using default URL api.intercom.io/users/bulk/")
-            self.config_data["intercom_api_url_bulk_users"]="api.intercom.io/users/bulk/"
+            self.config_data["intercom_bulk_api"]=False
+            self.log("Bulk API usage not specified - using non bulk API")
+        if not self.config_data["intercom_bulk_api"]:
+            try:
+                if self.config_data["intercom_api_url_users"]=="":
+                    self.log("Intercom API users URL is empty in config - using default URL api.intercom.io/users/")
+                    self.config_data["intercom_api_url_users"]="api.intercom.io/users/"
+                else:
+                    if not self.config_data["intercom_api_url_users"][-1]=="/":
+                        self.config_data["intercom_api_url_users"]=self.config_data["intercom_api_url_users"]+"/"
+                    self.log("Intercom API users URL is "+self.config_data["intercom_api_url_users"])
+            except KeyError as e:
+                self.log("Intercom API users URL is missing from config - using default URL api.intercom.io/users/")
+                self.config_data["intercom_api_url_users"]="api.intercom.io/users/"
+        else:
+            try:
+                if self.config_data["intercom_api_url_bulk_users"]=="":
+                    self.log("Intercom API users bulk URL is empty in config - using default URL api.intercom.io/users/bulk/")
+                    self.config_data["intercom_api_url_bulk_users"]="api.intercom.io/users/bulk/"
+                else:
+                    if not self.config_data["intercom_api_url_bulk_users"][-1]=="/":
+                        self.config_data["intercom_api_url_bulk_users"]=self.config_data["intercom_api_url_bulk_users"]+"/"
+                    self.log("Intercom API users bulk URL is "+self.config_data["intercom_api_url_bulk_users"])
+            except KeyError as e:
+                self.log("Intercom API users bulk URL is missing from config - using default URL api.intercom.io/users/bulk/")
+                self.config_data["intercom_api_url_bulk_users"]="api.intercom.io/users/bulk/"
         self.convert_to_int()
     #CSV file settings - Intercom parameters mapping
     def validate_csv_settings(self):
@@ -284,25 +316,7 @@ class Config_Data:
             self.config_data["custom_attributes_types"] = tmp
         except KeyError as e:
             self.valid=False
-            self.log_error("\nError: custom attributes Types missing in Intercom parameter mapping in config\n")  
-        #try:
-        #    self.config_data["location_data"] = self.config_data["location_data"].replace(" ", "")
-        #    self.config_data["location_data"] = self.config_data["location_data"].replace("{", "")
-        #    self.config_data["location_data"] = self.config_data["location_data"].replace("}", "")
-        #    self.config_data["location_data"] = self.config_data["location_data"].split(',')
-        #    tmp = dict() 
-        #    for param in self.config_data["location_data"]:
-        #        try:
-        #            param = param.split(":")
-        #            tmp[param[0]] = param[1]
-        #        except Exception as e:    
-        #            self.valid=False        
-        #            self.log_error("\nError: Invalid location_data in Intercom parameter mapping  - check with example format\n")  
-        #            break
-        #   self.config_data["location_data"] = tmp
-        #except KeyError as e:
-        #    self.valid=False
-        #    self.log_error("\nError: location_data missing in Intercom parameter mapping in config\n")  
+            self.log_error("\nError: custom attributes Types missing in Intercom parameter mapping in config\n")          
         try:
             if self.config_data["csv_delimiter"]=="":
                 self.config_data["csv_delimiter"]=","

@@ -134,9 +134,13 @@ def get_csv_aws_s3(config):
         config.log_error("\nError: "+str(e)+" in Line number "+str(sys.exc_traceback.tb_lineno)+" for AWS S3\n")
         notify_hipchat(config, "Import to Intercom failed, AWS S3 error", "red")
         notify_slack(config, "Import to Intercom failed, AWS S3 error")
-        
+
+# No. of users imported        
+no_of_users_imported=0
+
 #Read CSV file and upload users in batches        
 def read_csv_file(config, filename, batch_size=50):
+    global no_of_users_imported
     try:
         delimit=config.config_data["csv_delimiter"]
     except Exception as e:
@@ -145,7 +149,6 @@ def read_csv_file(config, filename, batch_size=50):
         delimit=","
     csvReader = csv.reader(open(filename, 'rb'), delimiter=delimit, quotechar='"') #comma delimited file
     data={"users":[]}
-    i=0
     for row in csvReader: #get headers in each column
         header=row
         break
@@ -239,18 +242,6 @@ def read_csv_file(config, filename, batch_size=50):
                     user["custom_attributes"][key.replace("_", " ")]=value
                 except Exception as e:
                    pass
-            #location_data=config.config_data["location_data"]
-            #for key, value in location_data.items():
-            #    try:
-            #        if "'" in value:
-            #            value=value.replace("'","")
-            #        elif value.strip() == "NULL":
-            #            value=""
-            #        else:
-            #            value=row[header.index(value)]
-            #        user["location_data"][key]=value
-            #    except Exception as e:
-            #        pass
             data["users"].append(user)
             i+=1
             if i%batch_size==0:
@@ -298,16 +289,29 @@ def read_csv_file(config, filename, batch_size=50):
                     config.log("Intercom API failed Retrying Intercom API")
                     stop=True
         if stop:
-            print "\nFailed to complete import to Intercom with "+str(i-batch_size)+" users done\n"
-            config.log("\nFailed to complete import to Intercom with "+str(i-batch_size)+" users done\n")
-            config.log_error("\nFailed to complete import to Intercom with "+str(i-batch_size)+" users done\n")
-            notify_hipchat(config, "Faile to complete import to Intercom with "+str(i-batch_size)+" users done", "red")   
-            notify_slack(config, "Failed to complete import to Intercom with "+str(i-batch_size)+" users done")   
+            if config.config_data["intercom_bulk_api"]:
+                print "\nFailed to complete import to Intercom with "+str(i-batch_size)+" users done\n"
+                config.log("\nFailed to complete import to Intercom with "+str(i-batch_size)+" users done\n")
+                config.log_error("\nFailed to complete import to Intercom with "+str(i-batch_size)+" users done\n")
+                notify_hipchat(config, "Failed to complete import to Intercom with "+str(i-batch_size)+" users done", "red")   
+                notify_slack(config, "Failed to complete import to Intercom with "+str(i-batch_size)+" users done")   
+            else:                
+                print "\nFailed to complete import to Intercom with "+str(no_of_users_imported)+" users done\n"
+                config.log("\nFailed to complete import to Intercom with "+str(no_of_users_imported)+" users done\n")
+                config.log_error("\nFailed to complete import to Intercom with "+str(no_of_users_imported)+" users done\n")
+                notify_hipchat(config, "Failed to complete import to Intercom with "+str(no_of_users_imported)+" users done", "red")   
+                notify_slack(config, "Failed to complete import to Intercom with "+str(no_of_users_imported)+" users done")   
         else:
-            print "\nImport of "+str(i)+" users to Intercom was successful in "+str(b)+" batches\n"
-            config.log("\nImport of "+str(i)+" users to Intercom was successful in "+str(b)+" batches\n")
-            notify_hipchat(config, "Import of "+str(i)+" users to Intercom was successful", "green") 
-            notify_slack(config, "Import of "+str(i)+" users to Intercom was successful")     
+            if config.config_data["intercom_bulk_api"]:
+                print "\nImport of "+str(i)+" users to Intercom was successful in "+str(b)+" batches\n"
+                config.log("\nImport of "+str(i)+" users to Intercom was successful in "+str(b)+" batches\n")
+                notify_hipchat(config, "Import of "+str(i)+" users to Intercom was successful", "green") 
+                notify_slack(config, "Import of "+str(i)+" users to Intercom was successful")     
+            else:  
+                print "\nImport of "+str(no_of_users_imported)+" users to Intercom was successful\n"
+                config.log("\nImport of "+str(no_of_users_imported)+" users to Intercom was successful\n")
+                notify_hipchat(config, "Import of "+str(no_of_users_imported)+" users to Intercom was successful", "green") 
+                notify_slack(config, "Import of "+str(no_of_users_imported)+" users to Intercom was successful")     
     except Exception as e:
         print "\nError: "+str(e)+" in Line number "+str(sys.exc_traceback.tb_lineno)+" for import csv\n"
         config.log("\nError: "+str(e)+" in Line number "+str(sys.exc_traceback.tb_lineno)+" for import csv\n")
@@ -316,32 +320,78 @@ def read_csv_file(config, filename, batch_size=50):
         notify_slack(config, "Import to Intercom failed")   
 
 #Method to add/update Intercom users list - POST request - JSON input/output
-def intercom(config, data, batch):    
+def intercom(config, data, batch):        
+    global no_of_users_imported
     try:
-        config.log(str(data))
-        url="https://"+config.config_data["intercom_api_url_bulk_users"]        
-        json_data = json.dumps(data) 
         authinfo = urllib2.HTTPPasswordMgrWithDefaultRealm()
         authinfo.add_password(None, "api.intercom.io" , config.config_data["intercom_api_id"], config.config_data["intercom_api_key"])
         handler = urllib2.HTTPBasicAuthHandler(authinfo)
         myopener = urllib2.build_opener(handler)
         opened = urllib2.install_opener(myopener) 
         base64string = base64.encodestring('%s:%s' % (config.config_data["intercom_api_id"], config.config_data["intercom_api_key"])).replace('\n', '')
-        req = urllib2.Request(url, json_data)
-        #req.add_header("Authorization", "Basic %s" % base64string)   
-        req.add_header('Content-Type', 'application/json')
-        req.add_header('Accept', 'application/json')        
-        response=urllib2.urlopen(req, timeout=config.config_data["intercom_timeout"])        
-        #reply=json.loads(response.read())
-        try:
-            config.log("Intercom Batch No. "+str(batch+1)+" completed")
-            print "Intercom Batch No. "+str(batch+1)+" completed"
-            #config.log("Intercom Job Id "+str(reply["id"]))
-            #config.log("Intercom Job Link "+str(reply["links"]["self"]))                         
-            #config.log("Intercom Job Errors "+str(reply["links"]["error"]))                         
-        except Exception as e:
-            pass
-        return True        
+        if config.config_data["intercom_bulk_api"]:
+            url="https://"+config.config_data["intercom_api_url_bulk_users"]        
+            json_data = json.dumps(data) 
+            req = urllib2.Request(url, json_data)
+            #req.add_header("Authorization", "Basic %s" % base64string)   
+            req.add_header('Content-Type', 'application/json')
+            req.add_header('Accept', 'application/json')        
+            response=urllib2.urlopen(req, timeout=config.config_data["intercom_timeout"])        
+            #reply=json.loads(response.read())
+            try:
+                config.log("Intercom Batch No. "+str(batch+1)+" completed")
+                print "Intercom Batch No. "+str(batch+1)+" completed"
+                #config.log("Intercom Job Id "+str(reply["id"]))
+                #config.log("Intercom Job Link "+str(reply["links"]["self"]))                         
+                #config.log("Intercom Job Errors "+str(reply["links"]["error"]))                         
+            except Exception as e:
+                pass
+            return True 
+        else:
+            url="https://"+config.config_data["intercom_api_url_users"] 
+            for user in data["users"]: 
+                try:
+                    json_data = json.dumps(user)      
+                    req = urllib2.Request(url, json_data)
+                    #req.add_header("Authorization", "Basic %s" % base64string)   
+                    req.add_header('Content-Type', 'application/json')
+                    req.add_header('Accept', 'application/json')        
+                    response=urllib2.urlopen(req, timeout=config.config_data["intercom_timeout"])        
+                    reply=json.loads(response.read())
+                    no_of_users_imported+=1
+                except urllib2.HTTPError, error: #connection error
+                    contents=json.loads(error.read())
+                    try:
+                        for value in contents["errors"]:
+                            error=""
+                            try:
+                                error+=" | Code:"+str(value["code"])
+                            except Exception as e:
+                                pass              
+                            try:
+                                error+=" | Message:"+str(value["message"])
+                            except Exception as e:
+                                pass                    
+                            try:
+                                error+=" | Field:"+str(value["field"])
+                            except Exception as e:
+                                pass                    
+                            config.log_error("Intercom Error: "+"Error: "+error)
+                    except Exception as e:
+                        try:
+                            config.log_error("Intercom Error: "+str(json.loads(contents)["errors"]))
+                        except Exception as e:                
+                            config.log_error("Intercom Error: "+str(contents))            
+                    #return False
+            try:
+                config.log("Intercom Batch No. "+str(batch+1)+" completed")
+                print "Intercom Batch No. "+str(batch+1)+" completed"
+                #config.log("Intercom Job Id "+str(reply["id"]))
+                #config.log("Intercom Job Link "+str(reply["links"]["self"]))                         
+                #config.log("Intercom Job Errors "+str(reply["links"]["error"]))                         
+            except Exception as e:
+                pass
+            return True 
     except urllib2.HTTPError, error: #connection error
         contents=json.loads(error.read())
         try:
@@ -383,45 +433,47 @@ def notify_hipchat( config, message, color, log_message=None,):
             req.add_header('Content-Type', 'application/x-www-form-urlencoded')
             response = urllib2.urlopen(req)    
             reply=json.loads(response.read())
+            try:
+                config.log("Message to hipchat \""+message+"\" "+str(reply["status"]))               
+            except KeyError as e:
+                config.log("Message to hipchat \""+message+"\" failed")
+                config.log_error("Message to hipchat \""+message+"\" failed")
+                config.log_error("\nError: "+str(e)+" in Line number "+str(sys.exc_traceback.tb_lineno)+" for hipchat response\n")    
+            except Exception as e:
+                config.log_error("\nError: "+str(e)+" in Line number "+str(sys.exc_traceback.tb_lineno)+" for hipchat response\n")
         except urllib2.HTTPError as e: #connection error
             error_message = json.loads(e.read())
             config.log_error("\nHipchat Error: "+error_message["error"]["message"]+"\n")    
         except Exception as e:
             config.log_error("\nError: "+str(e)+" in Line number "+str(sys.exc_traceback.tb_lineno)+" for hipchat config request\n")
-        try:
-            config.log("Message to hipchat \""+message+"\" "+str(reply["status"]))               
-        except KeyError as e:
-            config.log("Message to hipchat \""+message+"\" failed")
-            config.log_error("Message to hipchat \""+message+"\" failed")
-            config.log_error("\nError: "+str(e)+" in Line number "+str(sys.exc_traceback.tb_lineno)+" for hipchat response\n")    
-        except Exception as e:
-            config.log_error("\nError: "+str(e)+" in Line number "+str(sys.exc_traceback.tb_lineno)+" for hipchat response\n")
+        
 
 #Method to notify slack - POST request - JSON input and JSON output    
 def notify_slack( config, message, log_message=None,):
     if config.config_data["notify_slack"]:
         try:
-            values={"text":message,"username":config.config_data["slack_username"],"icon_url":config.config_data["slack_icon_url"],"icon_emoji":config.config_data["slack_icon_emoji"]}            
+            values={"text":message,"username":config.config_data["slack_username"],"icon_url":config.config_data["slack_icon_url"],"icon_emoji":config.config_data["slack_icon_emoji"],"channel":config.config_data["slack_channel"]}        
             url=config.config_data["slack_api_incoming_webhook"]
             data = json.dumps(values)            
             req = urllib2.Request(url, data)
             req.add_header('Content-Type', 'application/JSON')
             req.add_header('Accept', 'application/JSON')
             response = urllib2.urlopen(req)    
-            reply=json.loads(response.read())
+            reply=response.read()
+            try:
+                config.log("Message to slack \""+message+"\" "+str(reply))               
+            except KeyError as e:
+                config.log("Message to slack \""+message+"\" failed")
+                config.log_error("Message to slack \""+message+"\" failed")
+                config.log_error("\nError: "+str(e)+" in Line number "+str(sys.exc_traceback.tb_lineno)+" for slack response\n")    
+        except Exception as e:
+            config.log_error("\nError: "+str(e)+" in Line number "+str(sys.exc_traceback.tb_lineno)+" for slack response\n")    
         except urllib2.HTTPError as e: #connection error
-            error_message = json.loads(e.read())
-            config.log_error("\Slack Error: "+error_message["error"]["message"]+"\n")    
+            error_message = e.read()
+            config.log_error("\Slack Error: "+error_message+"\n")    
         except Exception as e:
             config.log_error("\nError: "+str(e)+" in Line number "+str(sys.exc_traceback.tb_lineno)+" for slack config request\n")
-        try:
-            config.log("Message to slack \""+message+"\" "+str(reply["status"]))               
-        except KeyError as e:
-            config.log("Message to slack \""+message+"\" failed")
-            config.log_error("Message to slack \""+message+"\" failed")
-            config.log_error("\nError: "+str(e)+" in Line number "+str(sys.exc_traceback.tb_lineno)+" for slack response\n")    
-        except Exception as e:
-            config.log_error("\nError: "+str(e)+" in Line number "+str(sys.exc_traceback.tb_lineno)+" for slack response\n")    
+        
 
 if __name__=="__main__":    
     print "\nExport Data Started\n"
@@ -432,7 +484,7 @@ if __name__=="__main__":
         #If no file argument is present, initialize config data without file name
         config=config_loader.Config_Data()
     #Check for config data validity - validations done upon initialization        
-    if config.valid:
+    if config.valid:        
         print "Config data loaded"
         notify_hipchat(config, "Import to Intercom was initiated", "yellow")
         notify_slack(config, "Import to Intercom was initiated")

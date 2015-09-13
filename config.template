@@ -5,7 +5,7 @@
  aws_folder="intercom-user/"
 # Full folder path for storing temporary CSV files from AWS S3 - default temporary folder provided by the OS will be used otherwise
  aws_local_tmp_folder="" 
- use_aws="false"
+ use_aws="true"
 ############################
 
 ### Local Storage for CSV file settings - used when AWS S3 is not used
@@ -26,12 +26,14 @@
 ### Intercom API config data
  intercom_api_id=""
  intercom_api_key=""
-# Maximum number of users imported per batch - depends on intercom API batch size - defaults to 50 if not specified
- intercom_batch_size="50"
 # Intercom API users create/update url  - do not add https:// or http:// - it will be done automatically after url basic authentication
+ intercom_api_url_users="api.intercom.io/users/"
+# Intercom API users bulk create/update url  - do not add https:// or http:// - it will be done automatically after url basic authentication
  intercom_api_url_bulk_users="api.intercom.io/users/bulk/"
 # Time limit in seconds for each batch of users to be added to Intercom
  intercom_timeout="30"
+# Intercom - use bulk API (no errors or failure provided) 
+ intercom_bulk_api="False"
 ############################
 
 ### Hipchat API config data
@@ -49,6 +51,8 @@
 ### Slack API config data - please use https:// in all slack urls if not present already
 # Slack API incoming webhook URL with https://
  slack_api_incoming_webhook=""
+# Slack Channel for slack notification - optional (default channel of webhook wil be used otherwise, for users - prepend username with "@") 
+ slack_channel="importernotifications"
 # User name for slack notification - optional (username by default is customized name used in webhook) 
  slack_username="IntercomImporter"
 # Icon for slack notification - optional (both URL (with https://) and emoji are needed if used)
@@ -69,7 +73,9 @@
 ############################
 
 ### Intercom Parameter Type Mapping
- basic_params_types="{user_id:string, email:string, id:string, signed_up_at:timestamp, name:string, user_agent_data: string, last_request_at:timestamp, unsubscribed_from_emails:boolean}"
+# Specify basic params and custom attributes with data type, allowed data types are float, integer, timestamp, string and boolean, wrong data types prevent data from being saved
+# Only Intercom specified basic params are allowed, extra ones will prevent data from being saved
+ basic_params_types="{user_id:string, email:string, id:string, signed_up_at:timestamp, name:string, last_seen_user_agent: string, last_request_at:timestamp, unsubscribed_from_emails:boolean}"
  custom_attributes_types="{personal_voucher_code:string, personal_voucher_amount:string, personal_voucher_currency:string, credits:string, already_redeemed_some_voucher:boolean, already_booked:boolean, language:string, country:string, last_city_visited:string, bookings_count:string, campaign_name:string, already_invited_the_contacts:boolean}"
 ############################
  
