@@ -15,7 +15,7 @@
 
 ### CSV File selection settings
 # Select file based on time based file name or specific file name
- select_file_on_latest_time="False"
+ select_file_on_latest_time="True"
 # Refer readme for time format - python time string format
  time_format="%Y-%m-%dT%H:%M:%S"
 # File_name - used when file selection is for a  particular file, this is enabled when select_file_on_latest_time="False"
