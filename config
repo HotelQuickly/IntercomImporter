@@ -5,7 +5,7 @@
  aws_folder="intercom-user/"
 # Full folder path for storing temporary CSV files from AWS S3 - default temporary folder provided by the OS will be used otherwise
  aws_local_tmp_folder="" 
- use_aws="true"
+ use_aws="false"
 ############################
 
 ### Local Storage for CSV file settings - used when AWS S3 is not used
@@ -19,13 +19,13 @@
 # Refer readme for time format - python time string format
  time_format="%Y-%m-%dT%H:%M:%S"
 # File_name - used when file selection is for a  particular file, this is enabled when select_file_on_latest_time="False"
- file_name="test_dump_03-09-15_14-32.csv"
+ file_name="2015-09-13T04-50-34.csv"
  csv_delimiter=","
 ############################
 
 ### Intercom API config data
- intercom_api_id=""
- intercom_api_key=""
+ intercom_api_id="g1wpl5d2"
+ intercom_api_key="d37b889d32d872247bb525cc5efc19c49271727a"
 # Intercom API users create/update url  - do not add https:// or http:// - it will be done automatically after url basic authentication
  intercom_api_url_users="api.intercom.io/users/"
 # Intercom API users bulk create/update url  - do not add https:// or http:// - it will be done automatically after url basic authentication
@@ -50,7 +50,7 @@
 
 ### Slack API config data - please use https:// in all slack urls if not present already
 # Slack API incoming webhook URL with https://
- slack_api_incoming_webhook=""
+ slack_api_incoming_webhook="https://hooks.slack.com/services/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"
 # Slack Channel for slack notification - optional (default channel of webhook wil be used otherwise, for users - prepend username with "@") 
  slack_channel="importernotifications"
 # User name for slack notification - optional (username by default is customized name used in webhook) 
@@ -66,12 +66,12 @@
 # Params mapping for Intercom API users - use JSON object string (avoid new lines and quotes, mention NULL in upper case)
 # Intercom parameter as key (left side) and HQ parameter (CSV file heading) as value (right side)
 # Use single quotes for default values eg. location_data - type key
- basic_params="{user_id:user_id, email:email, name:name, signed_up_at:first_seen_date_timestamp, last_request_at:last_seen_date_timestamp, unsubscribed_from_emails:unsubscribed_flag}"
+ basic_params="{user_id:user_id, email:email, id:id, name:name, signed_up_at:first_seen_date_timestamp, last_request_at:last_seen_date_timestamp, last_seen_user_agent:device, unsubscribed_from_emails:unsubscribed_flag}"
  custom_attributes="{personal_voucher_code:personal_voucher_code, personal_voucher_amount:personal_voucher_amount, personal_voucher_currency:personal_voucher_currency, credits:credits, already_redeemed_some_voucher:already_redeemed_some_voucher, already_booked:already_booked, language:language, country:country, last_city_visited:last_city_visited, bookings_count:bookings_count, campaign_name:campaign_name, already_invited_the_contacts:already_invited_the_contacts}"
 # Specify delimiter for CSV files - defaults to comma if not specified
  csv_delimiter=","
 # Specify order of headings in CSV file - comma delimited
- csv_headings_order="email,id,user_id,name,first_seen_date,first_seen_date_timestamp,last_seen_date,last_seen_date_timestamp,personal_voucher_code,personal_voucher_amount,personal_voucher_currency,credits,already_redeemed_some_voucher,already_booked,language,device,country,last_city_visited,bookings_count,campaign_name,already_invited_the_contacts,unsubscribed_flag,ip_address,city_name,continent_name,country_code,country_name,latitude,longitude,postal_code,region_name" 
+ csv_headings_order="email,id,user_id,name,first_seen_date,first_seen_date_timestamp,last_seen_date,last_seen_date_timestamp,personal_voucher_code,personal_voucher_amount,personal_voucher_currency,credits,already_redeemed_some_voucher,already_booked,language,device,country,last_city_visited,bookings_count,campaign_name,already_invited_the_contacts,unsubscribed_flag,ip_address,city_name,continent_name,country_code,country_name,latitude,longitude,postal_code,region_name"
 ############################
 
 ### Intercom Parameter Type Mapping

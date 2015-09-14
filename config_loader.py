@@ -318,6 +318,15 @@ class Config_Data:
             self.valid=False
             self.log_error("\nError: custom attributes Types missing in Intercom parameter mapping in config\n")          
         try:
+            if self.config_data["csv_headings_order"]=="":
+                self.valid=False
+                self.log_error("\nError: CSV Heading order empty in CSV Settings in config\n")          
+            else:
+                self.config_data["csv_headings_order"]=self.config_data["csv_headings_order"].split(",")            
+        except KeyError as e:
+            self.valid=False
+            self.log_error("\nError: CSV Heading order missing in CSV Settings in config\n")          
+        try:
             if self.config_data["csv_delimiter"]=="":
                 self.config_data["csv_delimiter"]=","
         except KeyError as e:

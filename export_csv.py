@@ -147,9 +147,10 @@ def read_csv_file(config, filename, batch_size=50):
         delimit=","
     csvReader = csv.reader(open(filename, 'rb'), delimiter=delimit, quotechar='"') #comma delimited file
     data={"users":[]}
-    for row in csvReader: #get headers in each column
-        header=row
-        break
+    #for row in csvReader: #get headers in each column
+    #    header=row
+    #    break
+    header=config.config_data["csv_headings_order"]
     try:
         i=0
         b=0
