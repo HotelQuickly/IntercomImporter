@@ -79,8 +79,6 @@ def use_local(config):
 #Use AWS S3 to get CSV file            
 def get_csv_aws_s3(config):
     try:
-        print config.config_data["aws_access_key"]
-        print config.config_data["aws_secret_key"]
         conn=S3Connection(config.config_data["aws_access_key"], config.config_data["aws_secret_key"]) #connect to aws s3
         bucket = conn.get_bucket(config.config_data["aws_bucket_name"]) #get bucket
         if config.config_data["select_file_on_latest_time"]: #time based selection
