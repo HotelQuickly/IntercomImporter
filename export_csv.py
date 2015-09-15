@@ -87,12 +87,15 @@ def get_csv_aws_s3(config):
             latest_time=None
             for file_key in bucket_list:
                 config.log("File "+str(file_key.key))
-                if latest_time is None:
-                    latest_time=time.strptime(str(file_key.key).split('.')[0].split('/')[-1], "%Y-%m-%dT%H:%M:%S")
-                    latest=file_key
-                elif latest_time<time.strptime(str(file_key.key).split('.')[0].split('/')[-1], "%Y-%m-%dT%H:%M:%S"):
-                    latest_time=time.strptime(str(file_key.key).split('.')[0].split('/')[-1], "%Y-%m-%dT%H:%M:%S")
-                    latest=file_key
+                try:
+                    if latest_time is None:
+                        latest_time=time.strptime(str(file_key.key).split('.')[0].split('/')[-1], "%Y-%m-%dT%H:%M:%S")
+                        latest=file_key
+                    elif latest_time<time.strptime(str(file_key.key).split('.')[0].split('/')[-1], "%Y-%m-%dT%H:%M:%S"):
+                        latest_time=time.strptime(str(file_key.key).split('.')[0].split('/')[-1], "%Y-%m-%dT%H:%M:%S")
+                        latest=file_key
+                except Exception as e:
+                    pass
             if latest=="":
                 print "\nError: No file found - check bucket name and file prefix\n"
                 config.log("\nError: No file found - check bucket name and file prefix\n")
